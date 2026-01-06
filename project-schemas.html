@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BaaS Database Schema Architecture (Dark Mode)</title>
+    <style>
+        :root {
+            /* Dark Mode Palette */
+            --bg-color: #0f172a;        /* Slate 900 */
+            --text-color: #e2e8f0;      /* Slate 200 */
+            --card-bg: #1e293b;         /* Slate 800 */
+            --card-text: #94a3b8;       /* Slate 400 */
+            
+            /* Accents */
+            --auth-accent: #38bdf8;     /* Sky 400 */
+            --auth-glow: rgba(56, 189, 248, 0.15);
+            
+            --dbo-accent: #4ade80;      /* Green 400 */
+            --dbo-glow: rgba(74, 222, 128, 0.15);
+            
+            --api-accent: #f472b6;      /* Pink 400 */
+            --api-glow: rgba(244, 114, 182, 0.15);
+            
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+            --connector-color: #475569; /* Slate 600 */
+        }
+
+        body {
+            font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            text-align: center;
+            color: #f1f5f9;
+            margin-bottom: 50px;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .container {
+            display: flex;
+            gap: 30px;
+            max-width: 1200px;
+            width: 100%;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .schema-card {
+            flex: 1;
+            min-width: 300px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: var(--card-shadow);
+            border-top: 4px solid #666;
+            position: relative;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .schema-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.6);
+        }
+
+        .schema-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .schema-desc {
+            line-height: 1.6;
+            font-size: 1rem;
+            color: var(--card-text);
+        }
+
+        .schema-desc ul {
+            padding-left: 20px;
+            margin-top: 10px;
+        }
+
+        .schema-desc li {
+            margin-bottom: 6px;
+        }
+
+        .schema-desc strong {
+            color: #f8fafc;
+        }
+
+        /* Specific Styles */
+        .card-auth {
+            border-top-color: var(--auth-accent);
+            background: linear-gradient(to bottom, var(--auth-glow) 0%, var(--card-bg) 20%);
+        }
+        .card-auth .schema-title { color: var(--auth-accent); }
+
+        .card-dbo {
+            border-top-color: var(--dbo-accent);
+            background: linear-gradient(to bottom, var(--dbo-glow) 0%, var(--card-bg) 20%);
+        }
+        .card-dbo .schema-title { color: var(--dbo-accent); }
+
+        .card-api {
+            border-top-color: var(--api-accent);
+            background: linear-gradient(to bottom, var(--api-glow) 0%, var(--card-bg) 20%);
+        }
+        .card-api .schema-title { color: var(--api-accent); }
+
+        .icon {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* Connector Lines for Desktop */
+        @media (min-width: 900px) {
+            .container {
+                position: relative;
+                align-items: stretch;
+            }
+            
+            .schema-card::after {
+                content: '';
+                position: absolute;
+                top: 50%;
+                right: -30px;
+                width: 30px;
+                height: 2px;
+                background: var(--connector-color);
+                z-index: -1;
+                opacity: 0.5;
+            }
+
+            .schema-card:last-child::after {
+                display: none;
+            }
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-top: 16px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #cbd5e1;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>BaaS 平台資料庫 Schema 架構圖</h1>
+
+    <div class="container">
+        <!-- Auth Schema -->
+        <div class="schema-card card-auth">
+            <div class="schema-title">
+                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                auth Schema
+            </div>
+            <div class="schema-desc">
+                <strong>身份認證核心 (Better-Auth)</strong><br>
+                此區域專門供 <code>better-auth</code> 套件使用，負責處理所有與使用者身份驗證相關的流程與資料儲存。
+                <br><br>
+                主要用途：
+                <ul>
+                    <li>受 <code>better-auth</code> 管理的使用者資料表</li>
+                    <li>Session 與 Account Link 管理</li>
+                    <li>提供安全的身份驗證基礎設施</li>
+                </ul>
+            </div>
+            <div class="badge">Powered by better-auth</div>
+        </div>
+
+        <!-- DBO Schema -->
+        <div class="schema-card card-dbo">
+            <div class="schema-title">
+                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                dbo Schema
+            </div>
+            <div class="schema-desc">
+                <strong>I3S 核心業務邏輯</strong><br>
+                BaaS 平台的資料核心，實作 I3S 架構。透過彈性的 Class-Object 結構儲存專案業務資料，並包含權限控制表。
+                <br><br>
+                主要用途：
+                <ul>
+                    <li>彈性化資料模型 (Classes, Objects)</li>
+                    <li>權限控制 (Permissions)</li>
+                    <li>專案核心業務資料</li>
+                </ul>
+            </div>
+            <div class="badge">Core Business Data</div>
+        </div>
+
+        <!-- API Schema -->
+        <div class="schema-card card-api">
+            <div class="schema-title">
+                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                api Schema
+            </div>
+            <div class="schema-desc">
+                <strong>PostgREST 自動映射層</strong><br>
+                BaaS 透過 PostgREST 將此 Schema 中的函式 (Functions) 自動轉換為 RESTful API。配合 Valibot 與 JWT，實現高效且安全的端點呼叫。
+                <br><br>
+                主要機制：
+                <ul>
+                    <li><strong>Function 即 API：</strong>自動對應為 API 端點</li>
+                    <li><strong>Runtime 安全：</strong>整合 Valibot 驗證輸入/輸出</li>
+                    <li><strong>權限整合：</strong>解析 JWT 並切換資料庫角色</li>
+                </ul>
+            </div>
+            <div class="badge">Functions to Endpoints</div>
+        </div>
+    </div>
+
+</body>
+</html>

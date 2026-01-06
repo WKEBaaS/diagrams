@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" class="dark">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dbo.permission_enum Data</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    >
+    <script>
+    tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        gray: {
+                            850: '#1f2937',
+                            900: '#111827',
+                            950: '#030712',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+    /* Custom Scrollbar for code block */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #1f2937; 
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #4b5563; 
+        border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #6b7280; 
+    }
+    </style>
+  </head>
+  <body class="bg-gray-950 text-gray-200 p-6 min-h-screen font-sans selection:bg-indigo-500 selection:text-white">
+    <div class="max-w-5xl mx-auto space-y-8">
+      <!-- Header Section -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-800 pb-6">
+        <div>
+          <h1 class="text-2xl font-semibold text-white tracking-tight flex items-center gap-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-6 w-6 text-indigo-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"
+              />
+            </svg>
+            dbo.permission_enum
+          </h1>
+          <p class="text-gray-400 mt-1 text-sm">權限枚舉表定義與資料預覽</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span
+            class="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-medium border border-emerald-500/20"
+          >
+            Active
+          </span>
+          <span
+            class="px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-400 text-xs font-medium border border-indigo-500/20"
+          >
+            7 Records
+          </span>
+        </div>
+      </div>
+
+      <!-- Data Table -->
+      <div class="bg-gray-900 rounded-lg border border-gray-800 shadow-xl overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-gray-850 border-b border-gray-700">
+                <!-- Removed ID Column -->
+                <th class="py-4 px-6 text-xs font-medium text-gray-400 uppercase tracking-wider">Name (Key)</th>
+                <th class="py-4 px-6 text-xs font-medium text-gray-400 uppercase tracking-wider text-right">
+                  Bit (Value)
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-800 text-sm">
+              <!-- Row 1 -->
+              <tr class="group hover:bg-gray-800/50 transition-colors duration-150">
+                <td class="py-3 px-6 font-medium text-white">read-class</td>
+                <td class="py-3 px-6 text-right font-mono text-emerald-400">1</td>
+              </tr>
+              <!-- Row 2 -->
+              <tr class="group hover:bg-gray-800/50 transition-colors duration-150">
+                <td class="py-3 px-6 font-medium text-white">read-object</td>
+                <td class="py-3 px-6 text-right font-mono text-emerald-400">2</td>
+              </tr>
+              <!-- Row 3 -->
+              <tr class="group hover:bg-gray-800/50 transition-colors duration-150">
+                <td class="py-3 px-6 font-medium text-white">insert</td>
+                <td class="py-3 px-6 text-right font-mono text-emerald-400">4</td>
+              </tr>
+              <!-- Row 4 -->
+              <tr class="group hover:bg-gray-800/50 transition-colors duration-150">
+                <td class="py-3 px-6 font-medium text-white">delete</td>
+                <td class="py-3 px-6 text-right font-mono text-emerald-400">8</td>
+              </tr>
+              <!-- Row 5 -->
+              <tr class="group hover:bg-gray-800/50 transition-colors duration-150">
+                <td class="py-3 px-6 font-medium text-white">update</td>
+                <td class="py-3 px-6 text-right font-mono text-emerald-400">16</td>
+              </tr>
+              <!-- Row 6 -->
+              <tr class="group hover:bg-gray-800/50 transition-colors duration-150">
+                <td class="py-3 px-6 font-medium text-white">modify</td>
+                <td class="py-3 px-6 text-right font-mono text-emerald-400">32</td>
+              </tr>
+              <!-- Row 7 -->
+              <tr class="group hover:bg-gray-800/50 transition-colors duration-150">
+                <td class="py-3 px-6 font-medium text-white">subscribe</td>
+                <td class="py-3 px-6 text-right font-mono text-emerald-400">64</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Schema Definition (Collapsible or just section) -->
+      <div class="pt-8">
+        <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Schema Definition</h2>
+        <div class="relative group">
+          <div class="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg blur opacity-10 group-hover:opacity-20 transition duration-1000 group-hover:duration-200">
+          </div>
+          <div class="relative bg-gray-900 ring-1 ring-gray-800 rounded-lg p-4 overflow-x-auto">
+            <pre class="font-mono text-sm leading-relaxed"><code class="language-sql"><span class="text-purple-400">create table</span> <span class="text-blue-400">dbo.permission_enum</span>
+(
+    <span class="text-orange-300">id</span>   <span class="text-yellow-300">uuid</span> <span class="text-purple-400">default</span> <span class="text-blue-300">uuidv7</span>() <span class="text-purple-400">not null</span>
+        <span class="text-purple-400">constraint</span> pk_permission_enum
+            <span class="text-purple-400">primary key</span>,
+    <span class="text-orange-300">name</span> <span class="text-yellow-300">text</span>
+        <span class="text-purple-400">constraint</span> uq_permission_enum_name
+            <span class="text-purple-400">unique</span>,
+    <span class="text-orange-300">bit</span>  <span class="text-yellow-300">smallint</span>              <span class="text-purple-400">not null</span>
+);
+
+<span class="text-purple-400">alter table</span> <span class="text-blue-400">dbo.permission_enum</span>
+    <span class="text-purple-400">owner to</span> app;
+
+<span class="text-purple-400">grant select on</span> <span class="text-blue-400">dbo.permission_enum</span> <span class="text-purple-400">to</span> anon;
+<span class="text-purple-400">grant select on</span> <span class="text-blue-400">dbo.permission_enum</span> <span class="text-purple-400">to</span> authenticated;
+<span class="text-purple-400">grant select on</span> <span class="text-blue-400">dbo.permission_enum</span> <span class="text-purple-400">to</span> app_admin;</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notification Toast (Hidden as UUID copy is removed, but kept for potential future use) -->
+    <div
+      id="toast"
+      class="fixed bottom-5 right-5 bg-gray-800 border border-gray-700 text-white px-4 py-2 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-2"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
+        <path
+          fill-rule="evenodd"
+          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+          clip-rule="evenodd"
+        />
+      </svg>
+      <span>Copied to clipboard!</span>
+    </div>
+
+    <script>
+    function copyToClipboard(text) {
+            // Create temporary element
+            const el = document.createElement('textarea');
+            el.value = text;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+
+            // Show toast
+            const toast = document.getElementById('toast');
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2000);
+        }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Namespace Architecture</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    >
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+
+    body {
+        font-family: 'Noto Sans TC', sans-serif;
+        background-color: #0f172a;
+    }
+
+    .code-font {
+        font-family: 'JetBrains Mono', monospace;
+    }
+
+    .component-box {
+        transition: all 0.3s ease;
+    }
+
+    .component-box:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+    }
+    </style>
+  </head>
+  <body class="text-white min-h-screen flex flex-col items-center justify-center p-8">
+    <!-- Title Section -->
+    <div class="mb-12 text-center">
+      <h1 class="text-3xl md:text-4xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">
+        Project Namespace Architecture
+      </h1>
+      <p class="text-slate-400 text-lg">專案資源層架構圖</p>
+    </div>
+
+    <!-- Main Container -->
+    <div class="relative w-full max-w-4xl">
+      <div class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-600 pb-2 flex justify-between">
+        <span>Project Namespace (專案資源層)</span>
+        <span class="normal-case text-xs bg-slate-700 px-2 py-0.5 rounded text-slate-300">
+          Namespace: baas-project
+        </span>
+      </div>
+
+      <div class="bg-slate-800/80 border border-slate-600 border-dashed rounded-2xl p-8 relative">
+        <!-- Background Label -->
+        <div class="absolute top-8 right-8 text-slate-600 text-7xl opacity-10 font-bold select-none">
+          PROJECT
+        </div>
+
+        <!-- Ingress Layer (Top) -->
+        <div class="mb-10 flex justify-center">
+          <div class="component-box w-full max-w-md bg-gradient-to-r from-orange-500/20 to-orange-600/20 border border-orange-500/50 rounded-lg p-4 flex items-center gap-4">
+            <div class="bg-orange-500 p-3 rounded text-white shadow-lg">
+              <i class="fas fa-network-wired text-xl"></i>
+            </div>
+            <div class="flex-1">
+              <h4 class="font-bold text-orange-200 text-lg">
+                Traefik IngressRoutes
+              </h4>
+              <div class="flex gap-2 mt-2">
+                <span class="text-xs bg-slate-900 text-slate-300 px-2 py-1 rounded code-font">
+                  /api/rest/*
+                </span>
+                <span class="text-xs bg-slate-900 text-slate-300 px-2 py-1 rounded code-font">
+                  /api/auth/*
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Service Layer (Middle) -->
+        <div class="grid grid-cols-2 gap-6 mb-10 relative">
+          <!-- Connection Lines -->
+          <div class="absolute top-[-30px] left-1/4 w-0.5 h-8 bg-slate-600"></div>
+          <div class="absolute top-[-30px] right-1/4 w-0.5 h-8 bg-slate-600"></div>
+
+          <!-- PostgREST -->
+          <div class="component-box bg-gradient-to-br from-emerald-600/20 to-emerald-800/20 border border-emerald-500/50 rounded-xl p-5">
+            <div class="flex items-center gap-3 mb-3">
+              <i class="fas fa-server text-emerald-400 text-2xl"></i>
+              <h4 class="font-bold text-emerald-200 text-lg">PostgREST</h4>
+            </div>
+            <p class="text-sm text-slate-300 mb-3">Auto API Generator</p>
+            <div class="text-xs text-emerald-200/70 code-font">
+              Reads: schema 'api'<br>
+              ROLE: anon, authenticated, app_admin
+            </div>
+          </div>
+
+          <!-- Better Auth -->
+          <div class="component-box bg-gradient-to-br from-purple-600/20 to-purple-800/20 border border-purple-500/50 rounded-xl p-5">
+            <div class="flex items-center gap-3 mb-3">
+              <i class="fas fa-shield-alt text-purple-400 text-2xl"></i>
+              <h4 class="font-bold text-purple-200 text-lg">Auth Service</h4>
+            </div>
+            <p class="text-sm text-slate-300 mb-3">Authentication Server</p>
+            <div class="text-xs text-purple-200/70 code-font">
+              TypeScript / Node<br>
+              Session Management
+            </div>
+          </div>
+        </div>
+
+        <!-- Persistence Layer (Bottom) -->
+        <div class="relative pt-8 border-t border-slate-600/50">
+          <!-- Connection Lines to DB -->
+          <div class="absolute top-0 left-1/4 w-0.5 h-8 bg-slate-600"></div>
+          <div class="absolute top-0 right-1/4 w-0.5 h-8 bg-slate-600"></div>
+
+          <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
+            <!-- CloudNativePG -->
+            <div class="md:col-span-3 component-box bg-gradient-to-r from-slate-700 to-slate-800 border border-slate-500 rounded-xl p-5 flex flex-col gap-4">
+              <div class="flex items-center gap-4">
+                <div class="bg-blue-500 p-3 rounded-full text-white shadow-lg shadow-blue-500/30">
+                  <i class="fas fa-database text-xl"></i>
+                </div>
+                <div>
+                  <h4 class="text-base font-bold text-blue-100">
+                    CNPG Cluster
+                  </h4>
+                  <p class="text-xs text-slate-400">
+                    PostgreSQL High Availability
+                  </p>
+                </div>
+              </div>
+
+              <!-- Schemas Container -->
+              <div class="bg-slate-900/50 rounded p-3 flex flex-col gap-2 border border-slate-600/50">
+                <!-- API Schema Highlight -->
+                <div class="flex items-center justify-between bg-emerald-900/30 px-3 py-2 rounded border border-emerald-500/30">
+                  <span class="text-xs text-emerald-300 code-font font-bold">
+                    Schema: api
+                  </span>
+                  <span
+                    class="text-[9px] bg-emerald-500 text-white px-2 py-0.5 rounded uppercase font-bold tracking-wider"
+                  >
+                    Functions Exposed
+                  </span>
+                </div>
+                <div class="flex gap-2">
+                  <span
+                    class="text-xs bg-slate-800 text-slate-400 px-3 py-2 rounded w-full text-center border border-slate-700"
+                  >
+                    Schema: dbo
+                  </span>
+                  <span
+                    class="text-xs bg-slate-800 text-slate-400 px-3 py-2 rounded w-full text-center border border-slate-700"
+                  >
+                    Schema: auth
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- MinIO Bucket -->
+            <div class="md:col-span-2 component-box bg-gradient-to-br from-rose-600/10 to-red-800/10 border border-rose-500/40 rounded-xl p-5 flex flex-col justify-between">
+              <div class="flex items-center gap-3">
+                <i class="fas fa-hdd text-rose-400 text-2xl"></i>
+                <h4 class="text-base font-bold text-rose-200">MinIO S3</h4>
+              </div>
+              <div class="text-xs text-rose-200/60 mt-3 mb-3">
+                Object Storage for file uploads & assets.
+              </div>
+              <div class="mt-auto">
+                <span
+                  class="text-xs bg-slate-900 text-rose-300 px-3 py-1.5 rounded code-font border border-rose-900/50 block text-center"
+                >
+                  bucket: baas-&lt;ref&gt;
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="mt-10 max-w-4xl text-center">
+      <div class="flex flex-wrap justify-center gap-6 text-sm text-slate-400">
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 bg-orange-500/50 rounded-full border border-orange-500"></span>
+          Routing
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 bg-emerald-500/50 rounded-full border border-emerald-500"></span>
+          API
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 bg-purple-500/50 rounded-full border border-purple-500"></span>
+          Auth
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 bg-slate-700 rounded-full border border-slate-500"></span>
+          Database
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 bg-rose-900/50 rounded-full border border-rose-500"></span>
+          Object Storage
+        </div>
+      </div>
+      <p class="mt-6 text-slate-500 text-sm max-w-2xl mx-auto">
+        專案命名空間包含完整的後端基礎設施：Traefik 路由、PostgREST API 生成器、Better-Auth 身份驗證、CloudNativePG
+        資料庫叢集（含 api、dbo、auth schemas）以及 MinIO 物件儲存。
+      </p>
+    </div>
+  </body>
+</html>

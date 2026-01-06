@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BaaS API Schema & Default APIs</title>
+    <style>
+        :root {
+            /* Dark Mode Palette */
+            --bg-color: #0f172a;        /* Slate 900 */
+            --text-color: #e2e8f0;      /* Slate 200 */
+            --card-bg: #1e293b;         /* Slate 800 */
+            --card-text: #94a3b8;       /* Slate 400 */
+            --code-bg: #020617;         /* Slate 950 */
+            
+            /* Accents */
+            --api-accent: #f472b6;      /* Pink 400 */
+            --api-glow: rgba(244, 114, 182, 0.15);
+            --method-get: #38bdf8;      /* Sky 400 */
+            --method-post: #4ade80;     /* Green 400 */
+            
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+            --border-color: #334155;
+        }
+
+        body {
+            font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 50px;
+            max-width: 800px;
+        }
+
+        h1 {
+            color: #f1f5f9;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .subtitle {
+            color: var(--card-text);
+            line-height: 1.6;
+            font-size: 1.1rem;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 24px;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        /* Intro Card */
+        .intro-card {
+            grid-column: 1 / -1;
+            background: linear-gradient(to right, var(--api-glow) 0%, var(--card-bg) 50%);
+            border-left: 4px solid var(--api-accent);
+            padding: 24px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .intro-title {
+            color: var(--api-accent);
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        /* API Card */
+        .api-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.2s;
+        }
+
+        .api-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--api-accent);
+        }
+
+        .api-header {
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .api-name {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-weight: 600;
+            color: #fff;
+            font-size: 1.1rem;
+        }
+
+        .method-badge {
+            font-size: 0.75rem;
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .method-rpc {
+            background: rgba(74, 222, 128, 0.1);
+            color: var(--method-post);
+            border: 1px solid rgba(74, 222, 128, 0.2);
+        }
+        
+        .method-get {
+            background: rgba(56, 189, 248, 0.1);
+            color: var(--method-get);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+        }
+
+        .api-body {
+            padding: 20px;
+            flex-grow: 1;
+        }
+
+        .description {
+            margin-bottom: 16px;
+            color: var(--card-text);
+            font-size: 0.95rem;
+        }
+
+        .param-section {
+            margin-top: 12px;
+        }
+
+        .label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: #64748b;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .code-block {
+            background: var(--code-bg);
+            padding: 10px;
+            border-radius: 6px;
+            font-family: 'Consolas', monospace;
+            font-size: 0.85rem;
+            color: #cbd5e1;
+            white-space: pre-wrap;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .param-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        .param-list li {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .param-list li:last-child {
+            border-bottom: none;
+        }
+
+        .param-name {
+            color: var(--api-accent);
+            font-family: monospace;
+        }
+
+        .param-type {
+            color: #64748b;
+            font-size: 0.8rem;
+        }
+
+        .tag-internal {
+            display: inline-block;
+            margin-top: 8px;
+            font-size: 0.7rem;
+            color: #94a3b8;
+            background: #334155;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        
+        .icon {
+            width: 32px;
+            height: 32px;
+            color: var(--api-accent);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header-section">
+        <h1>
+            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+            api Schema
+        </h1>
+        <div class="subtitle">
+            BaaS 的公開介面層。此 Schema 中的函式會透過 PostgREST 自動轉換為 API Endpoints，提供安全的權限控管與業務邏輯存取。
+        </div>
+    </div>
+
+    <div class="container">
+        
+        <!-- Intro Section -->
+        <div class="intro-card">
+            <div class="intro-title">PostgREST Mapping 機制</div>
+            <div style="color: var(--text-color);">
+                PostgREST 會將 <code>api</code> schema 中的 SQL Functions 暴露為 RPC (Remote Procedure Call) 端點。
+                <ul style="margin-top: 10px; padding-left: 20px; color: var(--card-text);">
+                    <li>呼叫方式：<code>POST /api/rest/rpc/&lt;function_name&gt;</code></li>
+                    <li>參數傳遞：以 JSON 物件放入 POST Body 中。</li>
+                    <li>權限驗證：PostgREST 處理 JWT 並切換 DB Role，函式內部透過 <code>auth.uid()</code> 或 <code>auth.jwt()</code> 取得當前使用者。</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 1. get_permission_enum -->
+        <div class="api-card">
+            <div class="api-header">
+                <span class="api-name">get_permission_enum</span>
+                <span class="method-badge method-get">GET / RPC</span>
+            </div>
+            <div class="api-body">
+                <div class="description">
+                    取得系統定義的所有權限列舉值 (Permission Enums)。此函式為 Immutable，結果可被快取。
+                </div>
+                <div class="param-section">
+                    <div class="label">Input Parameters</div>
+                    <div class="code-block" style="color: #64748b; font-style: italic;">None</div>
+                </div>
+                <div class="param-section">
+                    <div class="label">Return Type</div>
+                    <div class="code-block">setof dbo.permission_enum</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. check_class_permission -->
+        <div class="api-card">
+            <div class="api-header">
+                <span class="api-name">check_class_permission</span>
+                <span class="method-badge method-rpc">RPC</span>
+            </div>
+            <div class="api-body">
+                <div class="description">
+                    檢查當前登入使用者 (JWT Subject) 對指定 Class 是否擁有特定的權限。會自動驗證擁有者、群組與公開權限。
+                </div>
+                <div class="param-section">
+                    <div class="label">Input Parameters</div>
+                    <ul class="param-list">
+                        <li>
+                            <span class="param-name">p_class_id</span>
+                            <span class="param-type">text</span>
+                        </li>
+                        <li>
+                            <span class="param-name">p_permission</span>
+                            <span class="param-type">text (e.g. 'read', 'write')</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="param-section">
+                    <div class="label">Return Type</div>
+                    <div class="code-block">boolean</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. check_class_permission_by_name_path -->
+        <div class="api-card">
+            <div class="api-header">
+                <span class="api-name">check_class_permission_by_name_path</span>
+                <span class="method-badge method-rpc">RPC</span>
+            </div>
+            <div class="api-body">
+                <div class="description">
+                    透過路徑 (Name Path) 來檢查權限。這對於前端使用路由或麵包屑導航時非常有用。
+                </div>
+                <div class="param-section">
+                    <div class="label">Input Parameters</div>
+                    <ul class="param-list">
+                        <li>
+                            <span class="param-name">p_name_path</span>
+                            <span class="param-type">text</span>
+                        </li>
+                        <li>
+                            <span class="param-name">p_permission</span>
+                            <span class="param-type">text</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="param-section">
+                    <div class="label">Return Type</div>
+                    <div class="code-block">
+TABLE (
+  class_id varchar,
+  has boolean
+)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. get_class_permissions -->
+        <div class="api-card">
+            <div class="api-header">
+                <span class="api-name">get_class_permissions</span>
+                <span class="method-badge method-rpc">RPC</span>
+            </div>
+            <div class="api-body">
+                <div class="description">
+                    取得當前使用者對指定 Class ID 的<strong>所有</strong>權限狀態。會列出所有定義的權限並標示 True/False。
+                </div>
+                <div class="param-section">
+                    <div class="label">Input Parameters</div>
+                    <ul class="param-list">
+                        <li>
+                            <span class="param-name">p_class_id</span>
+                            <span class="param-type">text</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="param-section">
+                    <div class="label">Return Type</div>
+                    <div class="code-block">
+TABLE (
+  permission text,
+  has boolean
+)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. get_class_permissions_by_name_path -->
+        <div class="api-card">
+            <div class="api-header">
+                <span class="api-name">get_class_permissions_by_name_path</span>
+                <span class="method-badge method-rpc">RPC</span>
+            </div>
+            <div class="api-body">
+                <div class="description">
+                    透過路徑取得所有權限狀態。系統會自動正規化路徑 (移除結尾斜線) 並查找對應 Class ID。
+                </div>
+                <div class="param-section">
+                    <div class="label">Input Parameters</div>
+                    <ul class="param-list">
+                        <li>
+                            <span class="param-name">p_name_path</span>
+                            <span class="param-type">text</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="param-section">
+                    <div class="label">Return Type</div>
+                    <div class="code-block">
+TABLE (
+  class_id varchar,
+  permission text,
+  has boolean
+)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Internal / Helper -->
+        <div class="api-card" style="border-style: dashed; opacity: 0.8;">
+            <div class="api-header">
+                <span class="api-name">check_permission_core</span>
+                <span class="method-badge" style="background: #334155; color: #94a3b8;">INTERNAL</span>
+            </div>
+            <div class="api-body">
+                <div class="description">
+                    底層的核心權限檢查邏輯。通常由其他 API 呼叫，不建議前端直接使用。
+                </div>
+                <div class="param-section">
+                    <div class="label">Logic</div>
+                    <div class="description" style="font-size: 0.85rem;">
+                        1. 檢查是否為 App Admin<br>
+                        2. 檢查是否為 Owner<br>
+                        3. 檢查 Anon/Group/User 權限位元
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

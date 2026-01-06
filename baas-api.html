@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BaaS System Implementation: Automated Project Provisioning</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    >
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
+    body {
+        font-family: 'Noto Sans TC', sans-serif;
+        background-color: #0f172a; /* Slate 900 */
+    }
+
+    .code-font {
+        font-family: 'JetBrains+Mono', monospace;
+    }
+
+    .flow-line {
+        stroke-dasharray: 10;
+        animation: dash 30s linear infinite;
+    }
+
+    @keyframes dash {
+        to {
+            stroke-dashoffset: -1000;
+        }
+    }
+
+    .component-box {
+        transition: all 0.3s ease;
+    }
+
+    .component-box:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+    }
+    </style>
+  </head>
+  <body class="text-white min-h-screen flex flex-col items-center justify-center p-8">
+    <!-- Title Section -->
+    <div class="mb-12 text-center">
+      <h1 class="text-3xl md:text-4xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">
+        System Implementation: Automated Project Provisioning
+      </h1>
+      <p class="text-slate-400 text-lg">系統實作流程：專案資源自動化部署架構</p>
+    </div>
+
+    <!-- Main Diagram Container -->
+    <div class="relative w-full max-w-6xl bg-slate-800/50 rounded-2xl border border-slate-700 p-8 shadow-2xl backdrop-blur-sm">
+      <!-- Grid Layout -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        <!-- LEFT: Controller Plane (Project Service) -->
+        <div class="lg:col-span-3 flex flex-col gap-6 relative z-10">
+          <div class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-600 pb-2">
+            Control Plane (管理層)
+          </div>
+
+          <!-- User Action -->
+          <div class="bg-slate-700 rounded-lg p-4 border border-slate-600 flex items-center gap-3 opacity-70">
+            <div class="bg-blue-500/20 p-2 rounded text-blue-400">
+              <i class="fas fa-user"></i>
+            </div>
+            <div>
+              <div class="text-xs text-slate-400">User</div>
+              <div class="font-bold text-sm">Create Project</div>
+            </div>
+          </div>
+
+          <!-- Arrow Down -->
+          <div class="flex justify-center text-slate-500">
+            <i class="fas fa-arrow-down"></i>
+          </div>
+
+          <!-- Project Service Box -->
+          <div class="component-box bg-gradient-to-br from-indigo-600 to-blue-700 rounded-xl p-6 border border-blue-400/30 shadow-lg shadow-blue-900/50">
+            <div class="flex items-center justify-between mb-3">
+              <i class="fas fa-cogs text-2xl text-white/80"></i>
+              <span class="bg-blue-900/50 text-blue-200 text-xs px-2 py-1 rounded code-font">Go</span>
+            </div>
+            <h3 class="text-xl font-bold mb-1">Project Service</h3>
+            <p class="text-blue-200 text-xs leading-relaxed mb-4">
+              Kubernetes Operator Logic
+            </p>
+            <div class="space-y-2">
+              <div class="flex items-center gap-2 text-xs text-blue-100 bg-blue-800/30 p-2 rounded">
+                <i class="fas fa-check-circle text-green-400"></i>
+                <span>Validate Request</span>
+              </div>
+              <div class="flex items-center gap-2 text-xs text-blue-100 bg-blue-800/30 p-2 rounded">
+                <i class="fas fa-cube text-cyan-400"></i>
+                <span>Apply K8s Manifests</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MIDDLE: Connection / Action -->
+        <div class="lg:col-span-2 flex flex-col items-center justify-center relative h-full min-h-[100px]">
+          <div class="absolute inset-0 flex items-center justify-center">
+            <!-- SVG Arrow Line -->
+            <svg
+              class="w-full h-24 overflow-visible"
+              preserveAspectRatio="none"
+            >
+              <defs>
+                <marker
+                  id="arrowhead"
+                  markerWidth="10"
+                  markerHeight="7"
+                  refX="9"
+                  refY="3.5"
+                  orient="auto"
+                >
+                  <polygon points="0 0, 10 3.5, 0 7" fill="#64748b" />
+                </marker>
+              </defs>
+              <line
+                x1="0"
+                y1="50%"
+                x2="100%"
+                y2="50%"
+                stroke="#475569"
+                stroke-width="2"
+                marker-end="url(#arrowhead)"
+                class="flow-line"
+              />
+            </svg>
+          </div>
+          <div class="bg-slate-900 px-4 py-2 rounded-full border border-slate-700 z-10 text-xs font-mono text-cyan-400 shadow-xl">
+            k8s_client.Apply(Manifests)
+          </div>
+        </div>
+
+        <!-- RIGHT: Data Plane (Project Namespace) -->
+        <div class="lg:col-span-7 relative z-10">
+          <div class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-600 pb-2 flex justify-between">
+            <span>Project Namespace (專案資源層)</span>
+            <span class="normal-case text-xs bg-slate-700 px-2 py-0.5 rounded text-slate-300"
+            >Namespace: baas-project</span>
+          </div>
+
+          <div class="bg-slate-800/80 border border-slate-600 border-dashed rounded-2xl p-6 relative">
+            <!-- Background Label -->
+            <div class="absolute top-4 right-4 text-slate-600 text-6xl opacity-10 font-bold select-none">
+              PROJECT
+            </div>
+
+            <!-- Ingress Layer (Top) -->
+            <div class="mb-8 flex justify-center">
+              <div class="component-box w-full max-w-md bg-gradient-to-r from-orange-500/20 to-orange-600/20 border border-orange-500/50 rounded-lg p-3 flex items-center gap-4">
+                <div class="bg-orange-500 p-2 rounded text-white shadow-lg">
+                  <i class="fas fa-network-wired"></i>
+                </div>
+                <div class="flex-1">
+                  <h4 class="font-bold text-orange-200">
+                    Traefik IngressRoutes
+                  </h4>
+                  <div class="flex gap-2 mt-1">
+                    <span class="text-[10px] bg-slate-900 text-slate-300 px-2 py-0.5 rounded code-font"
+                    >/api/rest/*</span>
+                    <span class="text-[10px] bg-slate-900 text-slate-300 px-2 py-0.5 rounded code-font"
+                    >/api/auth/*</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Service Layer (Middle) -->
+            <div class="grid grid-cols-2 gap-6 mb-8 relative">
+              <!-- Connection Lines (CSS borders simulate connections) -->
+              <div class="absolute top-[-20px] left-1/4 w-0.5 h-6 bg-slate-600"></div>
+              <div class="absolute top-[-20px] right-1/4 w-0.5 h-6 bg-slate-600"></div>
+
+              <!-- PostgREST -->
+              <div class="component-box bg-gradient-to-br from-emerald-600/20 to-emerald-800/20 border border-emerald-500/50 rounded-xl p-4">
+                <div class="flex items-center gap-3 mb-2">
+                  <i class="fas fa-server text-emerald-400 text-xl"></i>
+                  <h4 class="font-bold text-emerald-200">PostgREST</h4>
+                </div>
+                <p class="text-xs text-slate-300 mb-2">Auto API Generator</p>
+                <div class="text-[10px] text-emerald-200/70 code-font">
+                  Reads: schema 'api'<br>
+                  ROLE: anon, authenticated, app_admin
+                </div>
+              </div>
+
+              <!-- Better Auth -->
+              <div class="component-box bg-gradient-to-br from-purple-600/20 to-purple-800/20 border border-purple-500/50 rounded-xl p-4">
+                <div class="flex items-center gap-3 mb-2">
+                  <i class="fas fa-shield-alt text-purple-400 text-xl"></i>
+                  <h4 class="font-bold text-purple-200">Better-Auth</h4>
+                </div>
+                <p class="text-xs text-slate-300 mb-2">Authentication Server</p>
+                <div class="text-[10px] text-purple-200/70 code-font">
+                  TypeScript / Node<br>
+                  Session Management
+                </div>
+              </div>
+            </div>
+
+            <!-- Persistence Layer (Bottom) -->
+            <div class="relative pt-6 border-t border-slate-600/50">
+              <!-- Connection Lines to DB -->
+              <div class="absolute top-0 left-1/4 w-0.5 h-6 bg-slate-600"></div>
+              <div class="absolute top-0 right-1/4 w-0.5 h-6 bg-slate-600"></div>
+
+              <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <!-- CloudNativePG -->
+                <div class="md:col-span-3 component-box bg-gradient-to-r from-slate-700 to-slate-800 border border-slate-500 rounded-xl p-4 flex flex-col gap-3">
+                  <div class="flex items-center gap-4">
+                    <div class="bg-blue-500 p-2.5 rounded-full text-white shadow-lg shadow-blue-500/30">
+                      <i class="fas fa-database text-lg"></i>
+                    </div>
+                    <div>
+                      <h4 class="text-sm font-bold text-blue-100">
+                        CNPG Cluster
+                      </h4>
+                      <p class="text-[10px] text-slate-400">
+                        PostgreSQL High Availability
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Schemas Container -->
+                  <div class="bg-slate-900/50 rounded p-2 flex flex-col gap-1.5 border border-slate-600/50">
+                    <!-- API Schema Highlight -->
+                    <div class="flex items-center justify-between bg-emerald-900/30 px-2 py-1 rounded border border-emerald-500/30">
+                      <span class="text-[10px] text-emerald-300 code-font font-bold">Schema: api</span>
+                      <span
+                        class="text-[8px] bg-emerald-500 text-white px-1.5 rounded uppercase font-bold tracking-wider"
+                      >Functions Exposed</span>
+                    </div>
+                    <div class="flex gap-2">
+                      <span
+                        class="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded w-full text-center border border-slate-700"
+                      >Schema: dbo</span>
+                      <span
+                        class="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded w-full text-center border border-slate-700"
+                      >Schema: auth</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- MinIO Bucket -->
+                <div class="md:col-span-2 component-box bg-gradient-to-br from-rose-600/10 to-red-800/10 border border-rose-500/40 rounded-xl p-4 flex flex-col justify-between">
+                  <div class="flex items-center gap-3">
+                    <i class="fas fa-hdd text-rose-400 text-lg"></i>
+                    <h4 class="text-sm font-bold text-rose-200">MinIO S3</h4>
+                  </div>
+                  <div class="text-[10px] text-rose-200/60 mt-2 mb-2">
+                    Object Storage for file uploads & assets.
+                  </div>
+                  <div class="mt-auto">
+                    <span
+                      class="text-[9px] bg-slate-900 text-rose-300 px-2 py-1 rounded code-font border border-rose-900/50 block text-center"
+                    >
+                      bucket: baas-&lt;ref&gt;
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Legend / Caption -->
+    <div class="mt-8 max-w-4xl text-center">
+      <div class="flex flex-wrap justify-center gap-6 text-xs text-slate-400">
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 bg-indigo-600 rounded-full"></span> Orchestrator
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 bg-orange-500/50 rounded-full border border-orange-500"></span>
+          Routing
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 bg-emerald-500/50 rounded-full border border-emerald-500"></span> API
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 bg-purple-500/50 rounded-full border border-purple-500"></span> Auth
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 bg-slate-700 rounded-full border border-slate-500"></span> Database
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 bg-rose-900/50 rounded-full border border-rose-500"></span> Object Storage
+        </div>
+      </div>
+      <p class="mt-4 text-slate-500 text-sm">
+        Figure: Project Service 自動化部署流程架構圖。新增 <strong>MinIO S3</strong>
+        用於檔案儲存，並在 DB 中明確定義 <strong>api schema</strong> 供 PostgREST 生成接口。
+      </p>
+    </div>
+  </body>
+</html>

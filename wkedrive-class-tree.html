@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Table Visualization</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+    body {
+        background-color: #1a1b26; /* Tokyo Night Dark */
+        color: #a9b1d6;
+        font-family: 'Consolas', 'Monaco', monospace;
+        overflow: hidden;
+    }
+
+    /* 樹狀結構連接線 */
+    .tree ul {
+        position: relative;
+        padding-left: 20px;
+        margin-left: 10px;
+        border-left: 1px solid #414868;
+    }
+    .tree > ul { border-left: none; margin-left: 0; padding-left: 0; }
+
+    .tree-node {
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+    }
+    .tree-node:hover {
+        background-color: #292e42;
+        border-color: #414868;
+    }
+    .tree-node.selected {
+        background-color: #3d59a1; /* 選中高亮 */
+        color: #fff;
+        border-color: #7aa2f7;
+    }
+
+    .nested { display: none; }
+    .nested.active { display: block; }
+
+    .arrow {
+        display: inline-block;
+        transition: transform 0.2s;
+        width: 16px;
+        text-align: center;
+        font-size: 0.8rem;
+        color: #7aa2f7;
+    }
+    .arrow.rotate { transform: rotate(90deg); }
+
+    /* SQL 程式碼樣式 */
+    .sql-block {
+        background-color: #24283b;
+        border: 1px solid #414868;
+        border-radius: 6px;
+        padding: 12px;
+        font-size: 0.85rem;
+        color: #9aa5ce;
+        overflow-x: auto;
+    }
+    .sql-key { color: #bb9af7; } /* purple */
+    .sql-val { color: #9ece6a; } /* green */
+    .sql-col { color: #7dcfff; } /* cyan */
+
+    /* 卷軸美化 */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #1a1b26; }
+    ::-webkit-scrollbar-thumb { background: #414868; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #565f89; }
+    </style>
+  </head>
+  <body class="h-screen w-screen flex flex-col">
+    <!-- Header -->
+    <header class="h-12 bg-[#16161e] border-b border-[#414868] flex items-center px-4 justify-between shrink-0">
+      <div class="flex items-center gap-2">
+        <i class="fas fa-database text-[#7aa2f7]"></i>
+        <span class="font-bold text-gray-100">Schema Explorer: dbo.classes</span>
+      </div>
+      <div class="text-xs text-gray-500">Real Data Visualization</div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex overflow-hidden">
+      <!-- 左側：樹狀視覺化 -->
+      <div class="w-1/3 min-w-[300px] border-r border-[#414868] flex flex-col bg-[#1a1b26]">
+        <div class="p-2 bg-[#24283b] text-xs font-bold text-[#7dcfff] border-b border-[#414868]">
+          VISUAL HIERARCHY (視覺層級)
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 tree select-none">
+          <ul id="tree-root">
+            <!-- 動態生成的樹將放在這裡 -->
+          </ul>
+        </div>
+      </div>
+
+      <!-- 右側：資料表檢視 -->
+      <div class="flex-1 flex flex-col bg-[#1f2335] overflow-y-auto">
+        <!-- Welcome State -->
+        <div id="empty-state" class="h-full flex flex-col items-center justify-center text-gray-500 opacity-60">
+          <i class="fas fa-search fa-3x mb-4"></i>
+          <p>請點擊左側目錄節點<br>查看背後的 SQL 資料結構</p>
+        </div>
+
+        <!-- Detail State -->
+        <div id="detail-panel" class="hidden p-6 space-y-6">
+          <!-- 標題 -->
+          <div class="flex items-end gap-3 pb-4 border-b border-[#414868]">
+            <h2 class="text-2xl font-bold text-white" id="detail-title">Node Name</h2>
+            <span class="text-sm text-[#7aa2f7]" id="detail-id">ID: ...</span>
+          </div>
+
+          <!-- dbo.classes 解說 -->
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <i class="fas fa-table text-[#e0af68]"></i>
+              <h3 class="font-bold text-gray-200">dbo.classes (節點資訊)</h3>
+              <span class="text-xs bg-[#414868] px-2 py-0.5 rounded text-gray-300">資料來源</span>
+            </div>
+            <div class="sql-block">
+              <div class="grid grid-cols-[160px_1fr] gap-y-1">
+                <span class="sql-col">id</span>
+                <span class="sql-val" id="row-id"></span>
+
+                <!-- 新增顯示 entity_id -->
+                <span class="sql-col">entity_id</span>
+                <span class="sql-val font-bold text-[#ff9e64]" id="row-entity-id"></span>
+
+                <span class="sql-col">chinese_name</span>
+                <span class="sql-val text-white" id="row-cname"></span>
+
+                <span class="sql-col">english_name</span>
+                <span class="sql-val text-gray-400" id="row-ename"></span>
+
+                <span class="sql-col">hierarchy_level</span>
+                <span class="sql-val" id="row-level"></span>
+
+                <span class="sql-col">id_path</span>
+                <span class="sql-val text-gray-400 italic break-all" id="row-idpath"></span>
+
+                <span class="sql-col">name_path</span>
+                <span class="sql-val text-gray-400 italic break-all" id="row-namepath"></span>
+
+                <span class="sql-col">is_child</span>
+                <span class="sql-val" id="row-ischild"></span>
+              </div>
+            </div>
+            <p class="mt-2 text-xs text-gray-400">
+              <i class="fas fa-info-circle mr-1"></i>
+              <code class="text-[#ff9e64]">entity_id: 3</code> 表示此節點為檔案 (File)。
+            </p>
+          </div>
+
+          <!-- dbo.inheritances 解說 -->
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <i class="fas fa-project-diagram text-[#f7768e]"></i>
+              <h3 class="font-bold text-gray-200">dbo.inheritances (層級關係)</h3>
+              <span class="text-xs bg-[#414868] px-2 py-0.5 rounded text-gray-300">關聯計算</span>
+            </div>
+
+            <div id="inheritance-info">
+              <!-- 動態內容 -->
+            </div>
+          </div>
+
+          <!-- 視覺化圖示說明 -->
+          <div class="bg-[#24283b] p-4 rounded border border-[#414868] mt-4">
+            <h4 class="font-bold text-gray-200 mb-2 text-sm">關係圖解 (Inheritance Visualization)：</h4>
+            <div class="flex items-center justify-center space-x-8 text-sm">
+              <div class="text-center w-1/3">
+                <div class="mb-1 text-[#e0af68] font-bold">Parent (父節點)</div>
+                <div class="w-10 h-10 rounded bg-[#414868] flex items-center justify-center mx-auto mb-1">
+                  <i class="fas fa-folder text-[#7aa2f7]"></i>
+                </div>
+                <!-- 這裡將顯示中文名稱 -->
+                <div class="text-xs text-gray-200 font-bold truncate" id="diagram-parent-name">...</div>
+                <div class="text-[10px] text-gray-500 truncate" id="diagram-parent-id">...</div>
+              </div>
+              <div class="flex flex-col items-center justify-center text-[#f7768e] w-1/6">
+                <i class="fas fa-long-arrow-alt-right fa-2x"></i>
+              </div>
+              <div class="text-center w-1/3">
+                <div class="mb-1 text-[#7dcfff] font-bold">Child (子節點)</div>
+                <!-- 動態調整圖示容器 -->
+                <div
+                  id="diagram-child-icon-container"
+                  class="w-10 h-10 rounded border-2 border-[#7dcfff] bg-[#24283b] flex items-center justify-center mx-auto mb-1"
+                >
+                  <i id="diagram-child-icon" class="fas fa-folder-open text-[#7aa2f7]"></i>
+                </div>
+                <!-- 這裡將顯示中文名稱 -->
+                <div class="text-xs text-gray-200 font-bold truncate" id="diagram-child-name">...</div>
+                <div class="text-[10px] text-gray-500 truncate" id="diagram-child-id">...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    const classesTable = [
+            { id: 'Yor5Gd_bTMEg1JmGyjs6f', entity_id: 1, name: '/', english_name: 'Root', level: 0, id_path: 'Yor5Gd_bTMEg1JmGyjs6f', name_path: '/', is_child: false, rank: 0 },
+            { id: 'wTyVuksJAcBvtjTBRQ-ZK', entity_id: null, name: '群組', english_name: 'Groups', level: 3, id_path: 'Yor5Gd_bTMEg1JmGyjs6f/vYssQwqKB-gGh83xreaK5/PYAy6YF0N4Ia9UUl5VKWO/wTyVuksJAcBvtjTBRQ-ZK', name_path: '/組織/WKE/群組', is_child: false, rank: 1 },
+            { id: 'vYssQwqKB-gGh83xreaK5', entity_id: null, name: '組織', english_name: 'Organizations', level: 1, id_path: 'Yor5Gd_bTMEg1JmGyjs6f/vYssQwqKB-gGh83xreaK5', name_path: '/組織', is_child: false, rank: 0 },
+            { id: '5QEhIiZkjvYL-Pl6NHoXf', entity_id: 3, name: 'Screenshot_2025-07-29_13-50-52.png', english_name: '', level: 4, id_path: 'Yor5Gd_bTMEg1JmGyjs6f/vYssQwqKB-gGh83xreaK5/PYAy6YF0N4Ia9UUl5VKWO/2QFE2X_QUGpGARqLvWYKW/5QEhIiZkjvYL-Pl6NHoXf', name_path: '/組織/WKE/Storage/Screenshot_2025-07-29_13-50-52.png', is_child: false, rank: 4 },
+            { id: 'PYAy6YF0N4Ia9UUl5VKWO', entity_id: null, name: 'WKE', english_name: 'Web Knowledge Extraction', level: 2, id_path: 'Yor5Gd_bTMEg1JmGyjs6f/vYssQwqKB-gGh83xreaK5/PYAy6YF0N4Ia9UUl5VKWO', name_path: '/組織/WKE', is_child: false, rank: 1 },
+            { id: 'vDvo9awwT2Djf5UD9ASLo', entity_id: null, name: '老師', english_name: '', level: 4, id_path: 'Yor5Gd_bTMEg1JmGyjs6f/vYssQwqKB-gGh83xreaK5/PYAy6YF0N4Ia9UUl5VKWO/2QFE2X_QUGpGARqLvWYKW/vDvo9awwT2Djf5UD9ASLo', name_path: '/組織/WKE/Storage/老師', is_child: false, rank: 1 },
+            // 修改了這裡：學士班 -> 專題生
+            { id: 'KR6iMCMpQFT7DzzAvcT9w', entity_id: null, name: '專題生', english_name: 'WKE Research Student', level: 4, id_path: 'Yor5Gd_bTMEg1JmGyjs6f/vYssQwqKB-gGh83xreaK5/PYAy6YF0N4Ia9UUl5VKWO/wTyVuksJAcBvtjTBRQ-ZK/KR6iMCMpQFT7DzzAvcT9w', name_path: '/組織/WKE/群組/專題生', is_child: false, rank: 3 },
+            { id: 'GH_18tKVhPl7_0lSXtsp0', entity_id: null, name: '碩士班', english_name: 'WKE Master', level: 4, id_path: 'Yor5Gd_bTMEg1JmGyjs6f/vYssQwqKB-gGh83xreaK5/PYAy6YF0N4Ia9UUl5VKWO/wTyVuksJAcBvtjTBRQ-ZK/GH_18tKVhPl7_0lSXtsp0', name_path: '/組織/WKE/群組/碩士班', is_child: false, rank: 2 },
+            { id: 'EecY1ALkjNRLlVVEbB1Ip', entity_id: null, name: '老師', english_name: 'WKE Master', level: 4, id_path: 'Yor5Gd_bTMEg1JmGyjs6f/vYssQwqKB-gGh83xreaK5/PYAy6YF0N4Ia9UUl5VKWO/wTyVuksJAcBvtjTBRQ-ZK/EecY1ALkjNRLlVVEbB1Ip', name_path: '/組織/WKE/群組/老師', is_child: false, rank: 1 },
+            { id: '2QFE2X_QUGpGARqLvWYKW', entity_id: null, name: 'Storage', english_name: 'Storage', level: 3, id_path: 'Yor5Gd_bTMEg1JmGyjs6f/vYssQwqKB-gGh83xreaK5/PYAy6YF0N4Ia9UUl5VKWO/2QFE2X_QUGpGARqLvWYKW', name_path: '/組織/WKE/Storage', is_child: false, rank: 2 },
+            { id: 'fucX4J0h1bXvhyrJ8HHBP', entity_id: null, name: '專題生', english_name: '', level: 4, id_path: 'Yor5Gd_bTMEg1JmGyjs6f/vYssQwqKB-gGh83xreaK5/PYAy6YF0N4Ia9UUl5VKWO/2QFE2X_QUGpGARqLvWYKW/fucX4J0h1bXvhyrJ8HHBP', name_path: '/組織/WKE/Storage/專題生', is_child: false, rank: 3 },
+            { id: '5f56OJrVVZeqppzstCmPy', entity_id: null, name: '碩士班', english_name: '', level: 4, id_path: 'Yor5Gd_bTMEg1JmGyjs6f/vYssQwqKB-gGh83xreaK5/PYAy6YF0N4Ia9UUl5VKWO/2QFE2X_QUGpGARqLvWYKW/5f56OJrVVZeqppzstCmPy', name_path: '/組織/WKE/Storage/碩士班', is_child: false, rank: 2 }
+        ];
+
+        // --- 2. 自動生成 dbo.inheritances 邏輯 ---
+        const inheritancesTable = classesTable.map(node => {
+            const parts = node.id_path.split('/');
+            const pcid = parts.length > 1 ? parts[parts.length - 2] : null;
+            return {
+                pcid: pcid,
+                ccid: node.id,
+                rank: node.rank
+            };
+        });
+
+        // --- 3. 構建樹狀結構的邏輯 ---
+        
+        function buildTree(parentId, container) {
+            const childrenRelations = inheritancesTable.filter(rel => rel.pcid === parentId);
+            childrenRelations.sort((a, b) => (a.rank || 0) - (b.rank || 0));
+
+            childrenRelations.forEach(rel => {
+                const nodeData = classesTable.find(c => c.id === rel.ccid);
+                if (!nodeData) return;
+
+                const li = document.createElement('li');
+                
+                // 邏輯修改：entity_id 為 3 視為檔案
+                const isFile = nodeData.entity_id === 3;
+                
+                // 判斷是否還有子節點 (如果不是檔案才檢查)
+                const hasChildren = !isFile && inheritancesTable.some(r => r.pcid === nodeData.id);
+                
+                // 圖示選擇
+                let iconClass = 'fa-folder icon-folder';
+                if (isFile) {
+                    iconClass = 'fa-file-image text-[#bb9af7]'; // 檔案圖示
+                } else if (nodeData.is_child) {
+                    iconClass = 'fa-file-code icon-file';
+                }
+
+                const arrowHtml = hasChildren 
+                    ? `<span class="arrow"><i class="fas fa-chevron-right"></i></span>` 
+                    : `<span class="arrow opacity-0"><i class="fas fa-chevron-right"></i></span>`;
+
+                const div = document.createElement('div');
+                div.className = 'tree-node py-1 px-2 rounded flex items-center mb-1';
+                div.innerHTML = `
+                    ${arrowHtml}
+                    <i class="fas ${iconClass} ml-2 mr-2"></i>
+                    <span class="truncate">${nodeData.name}</span>
+                `;
+                
+                div.onclick = (e) => {
+                    e.stopPropagation();
+                    selectNode(div, nodeData, rel);
+                    if (hasChildren) {
+                        const ul = li.querySelector('ul');
+                        if (ul) {
+                            ul.classList.toggle('active');
+                            div.querySelector('.arrow').classList.toggle('rotate');
+                            // 切換資料夾圖示
+                            const icon = div.querySelector('.fa-folder, .fa-folder-open');
+                            if(icon) {
+                                icon.classList.toggle('fa-folder');
+                                icon.classList.toggle('fa-folder-open');
+                            }
+                        }
+                    }
+                };
+
+                li.appendChild(div);
+
+                if (hasChildren) {
+                    const ul = document.createElement('ul');
+                    ul.className = 'nested ml-4';
+                    li.appendChild(ul);
+                    buildTree(nodeData.id, ul);
+                }
+
+                container.appendChild(li);
+            });
+        }
+
+        // --- 4. 渲染右側詳細資料 ---
+
+        function selectNode(element, data, relation) {
+            // UI 更新
+            document.querySelectorAll('.tree-node').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            document.getElementById('empty-state').classList.add('hidden');
+            document.getElementById('detail-panel').classList.remove('hidden');
+
+            // 填入標題
+            document.getElementById('detail-title').innerText = data.name;
+            document.getElementById('detail-id').innerText = data.id;
+
+            // 填入 dbo.classes 資料
+            document.getElementById('row-id').innerText = `'${data.id}'`;
+            document.getElementById('row-entity-id').innerText = data.entity_id !== null ? data.entity_id : 'NULL';
+            document.getElementById('row-cname').innerText = `'${data.name}'`;
+            document.getElementById('row-ename').innerText = data.english_name ? `'${data.english_name}'` : 'NULL';
+            document.getElementById('row-level').innerText = data.level;
+            document.getElementById('row-idpath').innerText = `'${data.id_path}'`;
+            document.getElementById('row-namepath').innerText = `'${data.name_path}'`;
+            document.getElementById('row-ischild').innerText = data.is_child ? 'true' : 'false';
+
+            // 填入 dbo.inheritances 資料
+            const inheritanceDiv = document.getElementById('inheritance-info');
+            
+            // 尋找父節點的中文名稱
+            let parentName = "NULL";
+            if (relation.pcid) {
+                const parentNode = classesTable.find(c => c.id === relation.pcid);
+                parentName = parentNode ? parentNode.name : "Unknown";
+            }
+
+            if (relation.pcid === null) {
+                inheritanceDiv.innerHTML = `<div class="text-gray-500 italic">這是根節點，沒有父層記錄 (pcid IS NULL)</div>`;
+                document.getElementById('diagram-parent-name').innerText = "(無)";
+                document.getElementById('diagram-parent-id').innerText = "NULL";
+            } else {
+                inheritanceDiv.innerHTML = `
+                    <div class="sql-block">
+                        <div class="grid grid-cols-[160px_1fr] gap-y-1">
+                            <span class="sql-col text-[#e0af68]">pcid (Parent)</span>
+                            <span class="sql-val text-[#e0af68] font-bold truncate" style="cursor:help" title="${relation.pcid}">'${relation.pcid}'</span>
+                            
+                            <span class="sql-col text-[#7dcfff]">ccid (Child)</span>
+                            <span class="sql-val text-[#7dcfff] font-bold truncate" style="cursor:help" title="${relation.ccid}">'${relation.ccid}'</span>
+
+                            <span class="sql-col">rank</span>
+                            <span class="sql-val">${relation.rank}</span>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('diagram-parent-name').innerText = parentName;
+                document.getElementById('diagram-parent-id').innerText = relation.pcid;
+            }
+            
+            // 更新關係圖解 - Child (也就是現在選中的這個節點)
+            document.getElementById('diagram-child-name').innerText = data.name;
+            document.getElementById('diagram-child-id').innerText = relation.ccid;
+            
+            // 更新關係圖解的圖示 (依據是否為檔案)
+            const childIcon = document.getElementById('diagram-child-icon');
+            if (data.entity_id === 3) {
+                childIcon.className = 'fas fa-file-image text-[#bb9af7]';
+            } else {
+                childIcon.className = 'fas fa-folder-open text-[#7aa2f7]';
+            }
+        }
+
+        // --- 初始化 ---
+        const rootContainer = document.getElementById('tree-root');
+        
+        // 尋找根節點 (inheritances 中 pcid 為 null 的項目)
+        const rootRel = inheritancesTable.find(r => r.pcid === null);
+        
+        if (rootRel) {
+            const rootData = classesTable.find(c => c.id === rootRel.ccid);
+            
+            const li = document.createElement('li');
+            const div = document.createElement('div');
+            div.className = 'tree-node py-1 px-2 rounded flex items-center mb-1 toggler';
+            div.innerHTML = `
+                <span class="arrow rotate"><i class="fas fa-chevron-right"></i></span>
+                <i class="fas fa-server text-[#bb9af7] ml-2 mr-2"></i>
+                <span class="font-bold text-[#bb9af7]">${rootData.name}</span>
+            `;
+            
+            const ul = document.createElement('ul');
+            ul.className = 'nested active ml-4';
+            ul.id = 'root-ul';
+            
+            li.appendChild(div);
+            li.appendChild(ul);
+            rootContainer.appendChild(li);
+
+            // 綁定根節點點擊
+            div.onclick = () => selectNode(div, rootData, rootRel);
+
+            // 開始遞迴構建子節點
+            buildTree(rootData.id, ul);
+            
+            // 預設選中根節點
+            selectNode(div, rootData, rootRel);
+        }
+    </script>
+  </body>
+</html>

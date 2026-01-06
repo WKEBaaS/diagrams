@@ -1,0 +1,10 @@
+{
+  "markup": {
+    "printWidth": 120
+  },
+  "excludes": [],
+  "plugins": [
+    "https://plugins.dprint.dev/g-plane/markup_fmt-v0.25.3.wasm",
+    "https://plugins.dprint.dev/json-0.21.0.wasm"
+  ]
+}

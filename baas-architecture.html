@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Architecture Diagram</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css"
+    />
+    <script>
+    tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            800: '#1f2937',
+                            900: '#111827',
+                            950: '#0b0f19',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #111827; }
+    ::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+
+    .diagram-node {
+        transition: all 0.3s ease;
+        z-index: 10;
+        position: relative;
+    }
+    .diagram-node:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+        border-color: #60a5fa; 
+    }
+
+    #connections-layer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .connection-path {
+        stroke: #4b5563;
+        stroke-width: 2;
+        fill: none;
+        transition: stroke 0.3s ease;
+    }
+
+    .connection-label {
+        fill: #9ca3af;
+        font-size: 10px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    </style>
+  </head>
+  <body class="bg-gray-950 text-gray-100 min-h-screen font-sans overflow-x-hidden selection:bg-blue-500 selection:text-white">
+    <main class="relative min-h-screen pt-16 pb-10 px-4 md:px-8 flex justify-center items-start overflow-auto">
+      <svg id="connections-layer">
+        <!-- Marker definition removed -->
+      </svg>
+
+      <!-- Grid Layout -->
+      <div class="relative w-full max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-y-16 gap-x-8 z-10">
+        <!-- ROW 1: Frontend -->
+        <div class="md:col-span-3 flex justify-center">
+          <div
+            id="frontend"
+            class="diagram-node w-64 p-4 rounded-xl border border-orange-500/30 bg-gray-900 shadow-xl shadow-orange-900/10 flex flex-col items-center gap-2"
+          >
+            <div class="p-2 rounded-lg bg-gray-800/50">
+              <i class="devicon-svelte-plain colored text-4xl"></i>
+            </div>
+            <h2 class="text-lg font-bold text-orange-400">SvelteKit</h2>
+            <p class="text-[10px] text-center text-gray-400 leading-tight">
+              Single Page App / SSR<br>Client Interface
+            </p>
+          </div>
+        </div>
+
+        <!-- ROW 2: Services Layer -->
+
+        <!-- Auth Service (Left) -->
+        <div class="flex justify-center md:justify-end">
+          <div
+            id="auth-service"
+            class="diagram-node w-56 p-4 rounded-xl border border-purple-500/30 bg-gray-900 shadow-xl shadow-purple-900/10 flex flex-col items-center gap-2"
+          >
+            <div class="p-2 rounded-lg bg-purple-500/10 text-purple-400">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <rect x="8" y="10" width="8" height="5" rx="1" />
+                <path d="M10 10V8a2 2 0 1 1 4 0v2" />
+              </svg>
+            </div>
+            <h3 class="text-base font-semibold text-purple-400">
+              Auth Service
+            </h3>
+            <div class="text-[10px] font-mono bg-gray-800 px-2 py-0.5 rounded text-purple-300">
+              TypeScript
+            </div>
+            <p class="text-[10px] text-center text-gray-500 mt-1 leading-tight">
+              Authentication &<br>Session Management
+            </p>
+          </div>
+        </div>
+
+        <!-- Project Service (Middle) -->
+        <div class="flex justify-center">
+          <div
+            id="project-service"
+            class="diagram-node w-56 p-4 rounded-xl border border-blue-500/30 bg-gray-900 shadow-xl shadow-blue-900/10 flex flex-col items-center gap-2"
+          >
+            <div class="p-2 rounded-lg bg-gray-800/50">
+              <i class="devicon-go-original-wordmark colored text-4xl"></i>
+            </div>
+            <h3 class="text-base font-semibold text-blue-400">
+              Project Service
+            </h3>
+            <div class="text-[10px] font-mono bg-gray-800 px-2 py-0.5 rounded text-blue-300">
+              Golang
+            </div>
+            <p class="text-[10px] text-center text-gray-500 mt-1 leading-tight">
+              Business Logic &<br>K8s Orchestration
+            </p>
+          </div>
+        </div>
+
+        <!-- PostgREST (Right) -->
+        <div class="flex justify-center md:justify-start">
+          <div
+            id="postgrest"
+            class="diagram-node w-56 p-4 rounded-xl border border-teal-500/30 bg-gray-900 shadow-xl shadow-teal-900/10 flex flex-col items-center gap-2"
+          >
+            <div class="p-2 rounded-lg bg-teal-500/10 text-teal-400">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect width="20" height="8" x="2" y="2" rx="2" ry="2" />
+                <rect width="20" height="8" x="2" y="14" rx="2" ry="2" />
+                <line x1="6" x2="6.01" y1="6" y2="6" />
+                <line x1="6" x2="6.01" y1="18" y2="18" />
+              </svg>
+            </div>
+            <h3 class="text-base font-semibold text-teal-400">PostgREST</h3>
+            <div class="text-[10px] font-mono bg-gray-800 px-2 py-0.5 rounded text-teal-300">
+              Haskell Binary
+            </div>
+            <p class="text-[10px] text-center text-gray-500 mt-1 leading-tight">
+              Instant REST API<br>over SQL
+            </p>
+          </div>
+        </div>
+
+        <!-- ROW 3: Infrastructure / Data -->
+
+        <!-- Spacer (Empty under Auth) -->
+        <div class="hidden md:block"></div>
+
+        <!-- Kubernetes -->
+        <div class="flex justify-center">
+          <div
+            id="k8s"
+            class="diagram-node w-56 p-4 rounded-xl border border-blue-400/30 bg-gray-800/50 border-dashed shadow-lg flex flex-col items-center gap-2"
+          >
+            <div class="p-2 rounded-lg bg-gray-800/50">
+              <i class="devicon-kubernetes-plain colored text-4xl"></i>
+            </div>
+            <h3 class="text-base font-semibold text-blue-300">Kubernetes</h3>
+            <p class="text-[10px] text-center text-gray-500 leading-tight">
+              Managed Resources
+            </p>
+          </div>
+        </div>
+
+        <!-- Database (Under PostgREST) -->
+        <div class="flex justify-center md:justify-start">
+          <div
+            id="database"
+            class="diagram-node w-56 p-4 rounded-xl border border-indigo-500/30 bg-gray-900 shadow-xl shadow-indigo-900/10 flex flex-col items-center gap-2"
+          >
+            <div class="p-2 rounded-lg bg-gray-800/50">
+              <i class="devicon-postgresql-plain colored text-4xl"></i>
+            </div>
+            <h3 class="text-base font-semibold text-indigo-400">PostgreSQL</h3>
+            <p class="text-[10px] text-center text-gray-500 leading-tight">
+              Primary Data Store
+            </p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+    const connections = [
+            { from: 'frontend', to: 'auth-service', label: 'Login / Logout', color: '#a855f7' },
+            { from: 'frontend', to: 'project-service', label: 'API Calls', color: '#3b82f6' },
+            { from: 'frontend', to: 'postgrest', label: 'Fetch Data', color: '#14b8a6' },
+            { from: 'project-service', to: 'k8s', label: 'Kube Client', color: '#60a5fa' },
+            { from: 'project-service', to: 'postgrest', label: 'Modify Data', color: '#2dd4bf' },
+            { from: 'postgrest', to: 'database', label: 'Query', color: '#6366f1' },
+            { from: 'auth-service', to: 'database', label: 'User / Session', color: '#d8b4fe' }
+        ];
+
+        function drawConnections() {
+            const svg = document.getElementById('connections-layer');
+            const mainContent = document.querySelector('main');
+            
+            svg.setAttribute('width', mainContent.scrollWidth);
+            svg.setAttribute('height', mainContent.scrollHeight);
+            
+            const oldPaths = svg.querySelectorAll('.connection-group');
+            oldPaths.forEach(p => p.remove());
+
+            connections.forEach((conn, index) => {
+                const fromEl = document.getElementById(conn.from);
+                const toEl = document.getElementById(conn.to);
+                if (!fromEl || !toEl) return;
+
+                const fromRect = fromEl.getBoundingClientRect();
+                const toRect = toEl.getBoundingClientRect();
+                const mainRect = mainContent.getBoundingClientRect();
+                const scrollX = mainContent.scrollLeft;
+                const scrollY = mainContent.scrollTop;
+
+                // Center points relative to SVG container
+                const fCx = fromRect.left + fromRect.width/2 - mainRect.left + scrollX;
+                const fCy = fromRect.top + fromRect.height/2 - mainRect.top + scrollY;
+                const tCx = toRect.left + toRect.width/2 - mainRect.left + scrollX;
+                const tCy = toRect.top + toRect.height/2 - mainRect.top + scrollY;
+
+                // Determine orientation based on position
+                const isHorizontal = Math.abs(fCy - tCy) < 50; // if Y difference is small
+                
+                let startX, startY, endX, endY, cp1x, cp1y, cp2x, cp2y;
+
+                if (isHorizontal) {
+                    // Side-to-Side Connection (e.g. Project -> PostgREST)
+                    if (fCx < tCx) {
+                        // Left to Right
+                        startX = fCx + fromRect.width/2;
+                        startY = fCy;
+                        endX = tCx - toRect.width/2;
+                        endY = tCy;
+                    } else {
+                        // Right to Left
+                        startX = fCx - fromRect.width/2;
+                        startY = fCy;
+                        endX = tCx + toRect.width/2;
+                        endY = tCy;
+                    }
+                    const dist = Math.abs(endX - startX) * 0.5;
+                    cp1x = startX + (fCx < tCx ? dist : -dist);
+                    cp1y = startY;
+                    cp2x = endX + (fCx < tCx ? -dist : dist);
+                    cp2y = endY;
+                } else {
+                    // Vertical Connection (Top to Bottom)
+                    // Logic: Distribute start points if coming from the same source (Frontend)
+                    // to avoid bunching at the center bottom.
+                    startX = fCx;
+                    startY = fCy + fromRect.height/2;
+                    endX = tCx;
+                    endY = tCy - toRect.height/2;
+
+                    // "Fan Out" Logic for Frontend
+                    if (conn.from === 'frontend') {
+                        if (conn.to === 'auth-service') {
+                            startX = fCx - fromRect.width * 0.25; // Start from left side
+                        } else if (conn.to === 'postgrest') {
+                            startX = fCx + fromRect.width * 0.25; // Start from right side
+                        }
+                        // Project Service stays center
+                    }
+
+                    const distY = Math.abs(endY - startY) * 0.5;
+                    cp1x = startX;
+                    cp1y = startY + distY;
+                    cp2x = endX;
+                    cp2y = endY - distY;
+                }
+
+                const d = `M ${startX} ${startY} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${endX} ${endY}`;
+
+                // Calculate midpoint on the curve for the label (t=0.5)
+                // Cubic Bezier Formula: B(t) = (1-t)^3 P0 + 3(1-t)^2 t P1 + 3(1-t) t^2 P2 + t^3 P3
+                const t = 0.5;
+                const midX = (1-t)**3 * startX + 3*(1-t)**2 * t * cp1x + 3*(1-t) * t**2 * cp2x + t**3 * endX;
+                const midY = (1-t)**3 * startY + 3*(1-t)**2 * t * cp1y + 3*(1-t) * t**2 * cp2y + t**3 * endY;
+
+                // Create SVG Group
+                const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                g.setAttribute("class", "connection-group");
+
+                // Path
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute("d", d);
+                path.setAttribute("class", "connection-path");
+                path.setAttribute("stroke", conn.color || "#4b5563");
+                
+                // Label Background
+                const textWidth = conn.label.length * 6 + 10; 
+                const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                rect.setAttribute("x", midX - textWidth/2);
+                rect.setAttribute("y", midY - 9);
+                rect.setAttribute("width", textWidth);
+                rect.setAttribute("height", 18);
+                rect.setAttribute("rx", 4);
+                rect.setAttribute("fill", "#111827");
+                rect.setAttribute("stroke", conn.color || "#374151");
+                rect.setAttribute("stroke-width", "1");
+
+                // Label Text
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", midX);
+                text.setAttribute("y", midY);
+                text.setAttribute("dy", "0.3em");
+                text.setAttribute("text-anchor", "middle");
+                text.setAttribute("class", "connection-label");
+                text.setAttribute("fill", conn.color || "#9ca3af");
+                text.textContent = conn.label;
+
+                // Hover Area
+                const hoverArea = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                hoverArea.setAttribute("d", d);
+                hoverArea.setAttribute("stroke", "transparent");
+                hoverArea.setAttribute("stroke-width", "20");
+                hoverArea.setAttribute("fill", "none");
+                hoverArea.style.cursor = "pointer";
+                
+                hoverArea.addEventListener('mouseenter', () => {
+                    path.setAttribute("stroke-width", "3");
+                    path.setAttribute("filter", `drop-shadow(0 0 3px ${conn.color})`);
+                });
+                hoverArea.addEventListener('mouseleave', () => {
+                    path.setAttribute("stroke-width", "2");
+                    path.setAttribute("filter", "none");
+                });
+
+                g.appendChild(path);
+                g.appendChild(hoverArea);
+                g.appendChild(rect);
+                g.appendChild(text);
+                svg.appendChild(g);
+            });
+        }
+
+        window.addEventListener('load', drawConnections);
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(drawConnections, 50);
+        });
+        // Initial delayed draw to catch font loading
+        setTimeout(drawConnections, 300);
+    </script>
+  </body>
+</html>

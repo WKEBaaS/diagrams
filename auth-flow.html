@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ed25519 Authentication Flow (DOM + Lucide)</title>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Segoe+UI:ital,wght@0,400;0,600;0,700;1,400&display=swap"
+      rel="stylesheet"
+    >
+
+    <style>
+    :root {
+        --bg-color: #1e1e2e;
+        --text-main: #cdd6f4;
+        --text-muted: #a6adc8;
+        --text-dark: #11111b;
+        --line-color: #585b70;
+        --line-highlight: #89b4fa;
+    
+        /* Node Colors */
+        --col-baas: #89b4fa;
+        --col-priv: #f38ba8;
+        --col-pub: #a6e3a1;
+        --col-auth: #cba6f7;
+        --col-pg: #94e2d5;
+        --col-user: #fab387;
+    }
+
+    body {
+        margin: 0;
+        background-color: var(--bg-color);
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: 'Segoe UI', sans-serif;
+        overflow: hidden;
+        color: var(--text-main);
+    }
+
+    /* Diagram Container */
+    .diagram-container {
+        position: relative;
+        width: 1000px;
+        height: 700px;
+        background-color: var(--bg-color);
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    /* Title Overlay */
+    .title-block {
+        position: absolute;
+        top: 40px;
+        width: 100%;
+        text-align: center;
+        z-index: 10;
+    }
+    .title-block h1 { margin: 0; font-size: 28px; color: var(--text-main); }
+    .title-block p { margin: 5px 0 0; color: var(--text-muted); font-style: italic; }
+
+    /* SVG Layer for Connections (Behind Nodes) */
+    .connections-layer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+        pointer-events: none;
+    }
+
+    /* Common Node Styles */
+    .node {
+        position: absolute;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        transition: transform 0.2s;
+        cursor: default;
+    }
+    .node:hover { transform: translateY(-2px); }
+
+    /* 1. BaaS Node */
+    .node-baas {
+        background-color: var(--col-baas);
+        color: var(--text-dark);
+        border-radius: 10px;
+        flex-direction: column;
+        box-shadow: 0 0 20px rgba(137, 180, 250, 0.2);
+    }
+
+    /* 2. Key Nodes */
+    .node-key {
+        padding: 8px 16px;
+        border-radius: 8px;
+        color: var(--text-dark);
+        font-weight: 600;
+        gap: 10px;
+        justify-content: flex-start;
+    }
+    .node-key.priv { background-color: var(--col-priv); }
+    .node-key.pub { background-color: var(--col-pub); }
+
+    /* 3. Service Nodes (Rich Content) */
+    .node-service {
+        background-color: #2a2a3c;
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.1);
+        display: block; /* Custom layout inside */
+        padding: 0;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .service-header {
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+        color: var(--text-dark);
+    }
+    .node-service.auth .service-header { background-color: var(--col-auth); }
+    .node-service.pg .service-header { background-color: var(--col-pg); }
+
+    .service-body {
+        padding: 12px 16px;
+    }
+    .service-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        margin-bottom: 6px;
+        color: var(--text-muted);
+    }
+    .service-tech {
+        margin-top: 8px;
+        text-align: right;
+        font-size: 11px;
+        font-family: monospace;
+        opacity: 0.7;
+    }
+
+    /* 4. User Node */
+    .node-user {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        background-color: var(--col-user);
+        color: #fff;
+        border: 4px solid #fff;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+    .user-label {
+        position: absolute;
+        bottom: -30px;
+        width: 150px;
+        text-align: center;
+        color: var(--text-main);
+        font-weight: 600;
+    }
+
+    /* Labels on paths */
+    .path-label {
+        position: absolute;
+        background-color: var(--bg-color);
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        color: var(--text-muted);
+        border: 1px solid var(--line-color);
+        z-index: 5;
+    }
+    .step-badge {
+        position: absolute;
+        width: 24px;
+        height: 24px;
+        background-color: #f9e2af;
+        color: var(--text-dark);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 14px;
+        z-index: 6;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+    </style>
+  </head>
+  <body>
+    <div class="diagram-container" id="diagram">
+      <div class="title-block">
+        <h1>Authentication Architecture (Ed25519)</h1>
+        <p>Optimized Trust & Request Flow</p>
+      </div>
+
+      <!-- SVG Layer for Lines -->
+      <svg class="connections-layer" id="svgLayer">
+        <!-- Markers removed -->
+      </svg>
+
+      <!-- HTML Nodes -->
+
+      <!-- 1. BaaS -->
+      <div class="node node-baas" style="width: 180px; height: 70px; left: 410px; top: 120px;" id="baas">
+        <div style="font-weight: 600; font-size: 18px;">BaaS Platform</div>
+        <div style="font-size: 14px; opacity: 0.8;">Key Generation</div>
+      </div>
+
+      <!-- 2. Keys -->
+      <div class="node node-key priv" style="width: 160px; height: 46px; left: 290px; top: 220px;" id="privKey">
+        <i data-lucide="key"></i>
+        <span>PrivateKey</span>
+      </div>
+
+      <div class="node node-key pub" style="width: 160px; height: 46px; left: 550px; top: 220px;" id="pubKey">
+        <i data-lucide="key"></i>
+        <span>PublicKey</span>
+      </div>
+
+      <!-- 3. Services -->
+      <div class="node node-service auth" style="width: 260px; height: 150px; left: 150px; top: 320px;" id="auth">
+        <div class="service-header">
+          <i data-lucide="shield"></i>
+          <span>Auth Service</span>
+        </div>
+        <div class="service-body">
+          <div class="service-item"><span style="color:var(--text-main)">• Validate User</span></div>
+          <div class="service-item"><span style="color:var(--col-priv)">• Sign JWT (Priv Key)</span></div>
+          <div class="service-tech">TypeScript / Node.js</div>
+        </div>
+      </div>
+
+      <div class="node node-service pg" style="width: 260px; height: 150px; left: 590px; top: 320px;" id="postgrest">
+        <div class="service-header">
+          <i data-lucide="database"></i>
+          <span>PostgREST</span>
+        </div>
+        <div class="service-body">
+          <div class="service-item"><span style="color:var(--col-pub)">• Verify JWT (Pub Key)</span></div>
+          <div class="service-item"><span style="color:var(--text-main)">• Role-Based Access</span></div>
+          <div class="service-tech">SQL / API</div>
+        </div>
+      </div>
+
+      <!-- 4. User -->
+      <div class="node node-user" style="left: 455px; top: 580px;" id="user">
+        <i data-lucide="user" style="width: 48px; height: 48px;"></i>
+        <div class="user-label">Client / User</div>
+      </div>
+
+      <!-- Overlay Badges/Labels -->
+      <div class="step-badge" style="left: 310px; top: 510px;">1</div>
+      <div class="path-label" style="left: 280px; top: 535px;">Credentials</div>
+
+      <div class="step-badge" style="left: 370px; top: 480px;">2</div>
+      <div class="path-label" style="left: 400px; top: 485px;">JWT (Signed)</div>
+
+      <div class="step-badge" style="left: 650px; top: 520px;">3</div>
+      <div class="path-label" style="left: 680px; top: 525px;">Request + Bearer</div>
+    </div>
+
+    <script>
+    // 1. Initialize Lucide Icons
+    lucide.createIcons();
+
+    // 2. Dynamic Line Drawing Logic
+    const svg = document.getElementById('svgLayer');
+
+    function getCenter(elId) {
+        const el = document.getElementById(elId);
+        const rect = el.getBoundingClientRect();
+        const container = document.getElementById('diagram').getBoundingClientRect();
+        return {
+            x: rect.left - container.left + rect.width / 2,
+            y: rect.top - container.top + rect.height / 2,
+            top: rect.top - container.top,
+            bottom: rect.bottom - container.top,
+            left: rect.left - container.left,
+            right: rect.right - container.left,
+            width: rect.width,
+            height: rect.height
+        };
+    }
+
+    function createPath(d, color, dashed = false) {
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", d);
+        path.setAttribute("stroke", color);
+        path.setAttribute("stroke-width", "2");
+        path.setAttribute("fill", "none");
+        if (dashed) {
+            path.setAttribute("stroke-dasharray", "5,5");
+        }
+        svg.appendChild(path);
+    }
+
+    function drawLines() {
+        const baas = getCenter('baas');
+        const priv = getCenter('privKey');
+        const pub = getCenter('pubKey');
+        const auth = getCenter('auth');
+        const pg = getCenter('postgrest');
+        const user = getCenter('user');
+
+        const gray = '#585b70';
+        const blue = '#89b4fa';
+
+        // 1. Setup Phase (Gray, Dashed)
+        
+        // BaaS -> PrivKey
+        createPath(`M ${baas.x} ${baas.bottom} C ${baas.x} ${priv.top-20}, ${priv.x} ${baas.bottom+20}, ${priv.x} ${priv.top}`, gray, true);
+        
+        // BaaS -> PubKey
+        createPath(`M ${baas.x} ${baas.bottom} C ${baas.x} ${pub.top-20}, ${pub.x} ${baas.bottom+20}, ${pub.x} ${pub.top}`, gray, true);
+
+        // PrivKey -> Auth
+        createPath(`M ${priv.x} ${priv.bottom} L ${priv.x} ${auth.top}`, gray, true);
+
+        // PubKey -> PostgREST
+        createPath(`M ${pub.x} ${pub.bottom} L ${pub.x} ${pg.top}`, gray, true);
+
+
+        // 2. Runtime Phase (Blue, Solid, No Arrows)
+
+        // User -> Auth (Credentials)
+        // From User Left to Auth Bottom
+        createPath(`M ${user.left} ${user.y} C ${user.left - 50} ${user.y}, ${auth.x} ${auth.bottom + 50}, ${auth.x} ${auth.bottom}`, blue, false);
+
+        // Auth -> User (JWT)
+        // From Auth Right to User Top (Curved)
+        createPath(`M ${auth.right} ${auth.y+40} C ${auth.right + 50} ${auth.y+40}, ${user.x-20} ${user.top-30}, ${user.x} ${user.top}`, blue, false);
+
+        // User -> PostgREST (Request)
+        // From User Right to PostgREST Bottom
+        createPath(`M ${user.right} ${user.y} C ${user.right + 50} ${user.y}, ${pg.x} ${pg.bottom + 50}, ${pg.x} ${pg.bottom}`, blue, false);
+    }
+
+    // Draw immediately
+    drawLines();
+    </script>
+  </body>
+</html>
